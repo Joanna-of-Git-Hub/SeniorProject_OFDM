@@ -1,0 +1,33 @@
+function cfo_corr  = coarseFreqOffset_comp(rx, tauHat, N)
+
+% https://dspillustrations.com/pages/posts/misc/schmidlcox-synchronization-for-ofdm.html
+% Microsoft Copilot
+% https://www.mathworks.com/help/releases/R2025b/comm/ref/pskmod.html
+
+% tunable variables
+%half = 32; % each preamble half is 32 units long
+%oversample = 4; % oversampling factor
+%N = half*oversample; % repeated values
+
+L = length(rx);
+
+if tauHat >= 0 && (tauHat + 2*N) <= L
+    
+    % repeated halves locations
+    h1 = rx(tauHat + (1:N));
+    h2 = rx(tauHat + N + (1:N));
+
+    % determine phase angle
+    phaseAngle = angle(sum(conj(h1) .* h2));
+    
+    % estimated freq offset
+    e_hat = phaseAngle/(2*pi*N);
+    
+    % correct rotation
+    n = (0:L-1).';
+    cfo_corr = rx .* exp(-1j*2*pi*e_hat*n);
+else
+    cfo_corr = rx;
+end
+
+end
