@@ -1,0 +1,39 @@
+function [symbol0, symbol1] = alignFFT_comp(tauHat, cfo_corr)
+%#codegen
+
+% https://dspillustrations.com/pages/posts/misc/schmidlcox-synchronization-for-ofdm.html
+% Microsoft Copilot
+% https://www.mathworks.com/help/releases/R2025b/comm/ref/pskmod.html
+
+% tunable variables
+oversample = 4;
+CPLen = 16; % cyclic prefix length w/o oversampling
+Nfft = 64; % FFT size before oversampling
+
+% OFDM and sampling calculations
+CPLen_os = CPLen * oversample; % 64 -> oversampled cyclic prefix length
+Nfft_os = Nfft *oversample; % 64*4 = 256 samples total
+symbol_os = (Nfft + CPLen) *oversample; % (64+16)*4 = 320 samples total
+
+tauHat = tauHat + (Nfft_os/2); % centering tauHat in preamble plateau
+
+if tauHat >= 0
+    % starting of OFDM symbols (including CP)
+    symbol_0_CPstart = (tauHat +1) - CPLen_os;
+    symbol_0_FFTstart = symbol_0_CPstart + CPLen_os; 
+    symbol_1_CPstart = symbol_0_CPstart + symbol_os;
+    symbol_1_FFTstart = symbol_1_CPstart + CPLen_os;
+    
+    % actual symbols
+    symbol_0_os = cfo_corr(symbol_0_CPstart+1 : symbol_0_CPstart +symbol_os);
+    symbol_1_os = cfo_corr(symbol_1_CPstart+1 : symbol_1_CPstart +symbol_os);
+    % symbol_0_os = cfo_corr(symbol_0_FFTstart+1 : symbol_0_FFTstart +Nfft_os);
+    % symbol_1_os = cfo_corr(symbol_1_FFTstart+1 : symbol_1_FFTstart +Nfft_os);
+    
+    symbol0 = symbol_0_os(1:oversample:end);
+    symbol1 = symbol_1_os(1:oversample:end);
+% else
+%     return;
+end
+
+end
