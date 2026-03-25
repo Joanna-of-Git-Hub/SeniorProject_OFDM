@@ -1,0 +1,12 @@
+function y = CPpreamble(x)
+%#codegen
+
+% adding cyclic prefix to OFDM modulated preamble
+
+Nfft = 64; % FFT Length (also # of subcarriers)
+CP = 16; % Cyclic Prefix Length
+
+half = x(1:Nfft/2);
+preambleNoCP = [half;half];
+y = [preambleNoCP(end-CP+1:end);preambleNoCP];
+end
