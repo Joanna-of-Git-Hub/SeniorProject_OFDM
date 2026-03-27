@@ -7,7 +7,7 @@ function [symbol0, symbol1] = alignFFT_comp(tauHat, cfo_corr)
 
 % tunable variables
 oversample = 4;
-CPLen = 16; % cyclic prefix length w/o oversampling
+CPLen = 0; % cyclic prefix length w/o oversampling
 Nfft = 64; % FFT size before oversampling
 
 % OFDM and sampling calculations
@@ -16,6 +16,9 @@ Nfft_os = Nfft *oversample; % 64*4 = 256 samples total
 symbol_os = (Nfft + CPLen) *oversample; % (64+16)*4 = 320 samples total
 
 tauHat = tauHat + (Nfft_os/2); % centering tauHat in preamble plateau
+
+symbol0 = complex(zeros(Nfft, 1));
+symbol1 = complex(zeros(Nfft, 1));
 
 if tauHat >= 0
     % starting of OFDM symbols (including CP)
