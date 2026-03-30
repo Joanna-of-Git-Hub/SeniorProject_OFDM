@@ -5,6 +5,8 @@ function [symbol0, symbol1] = alignFFT_comp(tauHat, cfo_corr)
 % Microsoft Copilot
 % https://www.mathworks.com/help/releases/R2025b/comm/ref/pskmod.html
 
+length_cfo = length(cfo_corr);
+
 % tunable variables
 oversample = 4;
 CPLen = 0; % cyclic prefix length w/o oversampling
@@ -17,26 +19,30 @@ symbol_os = (Nfft + CPLen) *oversample; % (64+16)*4 = 320 samples total
 
 tauHat = tauHat + (Nfft_os/2); % centering tauHat in preamble plateau
 
-symbol0 = complex(zeros(Nfft, 1));
-symbol1 = complex(zeros(Nfft, 1));
+tmp0 = complex(zeros((Nfft+CPLen), 1));
+tmp1 = complex(zeros(Nfft+CPLen, 1));
 
-if tauHat >= 0
-    % starting of OFDM symbols (including CP)
-    symbol_0_CPstart = (tauHat +1) - CPLen_os;
-    symbol_0_FFTstart = symbol_0_CPstart + CPLen_os; 
-    symbol_1_CPstart = symbol_0_CPstart + symbol_os;
-    symbol_1_FFTstart = symbol_1_CPstart + CPLen_os;
+% starting of OFDM symbols (including CP)
+symbol_0_CPstart = (tauHat) - CPLen_os;
+symbol_0_FFTstart = symbol_0_CPstart + CPLen_os; 
+symbol_1_CPstart = symbol_0_CPstart + symbol_os;
+symbol_1_FFTstart = symbol_1_CPstart + CPLen_os;
+
+if tauHat >= 0 && (symbol_1_CPstart + symbol_os -1) <= length_cfo
+
     
     % actual symbols
-    symbol_0_os = cfo_corr(symbol_0_CPstart+1 : symbol_0_CPstart +symbol_os);
-    symbol_1_os = cfo_corr(symbol_1_CPstart+1 : symbol_1_CPstart +symbol_os);
+    symbol_0_os = cfo_corr(symbol_0_CPstart : symbol_0_CPstart +symbol_os -1);
+    symbol_1_os = cfo_corr(symbol_1_CPstart : symbol_1_CPstart +symbol_os -1);
     % symbol_0_os = cfo_corr(symbol_0_FFTstart+1 : symbol_0_FFTstart +Nfft_os);
     % symbol_1_os = cfo_corr(symbol_1_FFTstart+1 : symbol_1_FFTstart +Nfft_os);
     
-    symbol0 = symbol_0_os(1:oversample:end);
-    symbol1 = symbol_1_os(1:oversample:end);
+    tmp0(:) = symbol_0_os(1:oversample:end);
+    tmp1(:) = symbol_1_os(1:oversample:end);
 % else
 %     return;
 end
+symbol0 = tmp0(:);
+symbol1 = tmp1(:);
 
 end
